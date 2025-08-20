@@ -106,7 +106,6 @@ function createUI() {
         showSphere = !showSphere;
         if (showSphere) {
             sphereButton.html("Tắt lớp cầu");
-            // Thêm đoạn code này để tắt lớp phủ khi bật lớp cầu
             if (state === "overlap_spinning") {
                 state = "done";
                 overlapButton.html("Bật xen phủ");
@@ -219,9 +218,8 @@ function positionButtons() {
 function resetSimulation() {
     atoms = [];
 
-    // Tạo hai nguyên tử Nitrogen (N) với 7 proton và cấu hình [2, 5]
-    atoms.push(new Atom(-initialDistance / 2, 0, "N", 7, [2, 5], color(255, 165, 0))); // Màu cam
-    atoms.push(new Atom(initialDistance / 2, 0, "N", 7, [2, 5], color(100, 255, 255))); // Màu xanh lơ
+    atoms.push(new Atom(-initialDistance / 2, 0, "N", 7, [2, 5], color(255, 165, 0)));
+    atoms.push(new Atom(initialDistance / 2, 0, "N", 7, [2, 5], color(100, 255, 255)));
 
     state = "idle";
     progress = 0;
@@ -320,14 +318,12 @@ function draw() {
 
 function drawElectronClouds() {
     const outerRadius = atoms[0].shellRadii[1];
-    const cloudWidth = 15; // Giảm độ dày của lớp xen phủ
-    const torusRadius = outerRadius * 0.9; // Tăng bán kính hình xuyến lên 0.9 lần
+    const cloudWidth = 15;
+    const torusRadius = outerRadius * 0.9;
 
-    // Màu pha trộn giữa cam sáng và xanh lơ
     let blendedColor = lerpColor(color(255, 165, 0), color(100, 255, 255), 0.5);
     blendedColor.setAlpha(255);
 
-    // Vẽ đám mây xen phủ cho nguyên tử bên trái
     push();
     translate(atoms[0].pos.x, atoms[0].pos.y, 0);
     rotateZ(cloudRotationAngle);
@@ -336,7 +332,6 @@ function drawElectronClouds() {
     torus(torusRadius, cloudWidth, 12, 12);
     pop();
 
-    // Vẽ đám mây xen phủ cho nguyên tử bên phải
     push();
     translate(atoms[1].pos.x, atoms[1].pos.y, 0);
     rotateZ(cloudRotationAngle);
@@ -351,46 +346,23 @@ function drawElectronSpheres() {
     const n2Atom = atoms[1];
     const nOrbitalRadius = nOuterRadius + 6;
 
-    // Màu mặt cầu đồng nhất với màu lớp xen phủ
     let blendedSphereColor = lerpColor(color(255, 165, 0), color(100, 255, 255), 0.5);
     blendedSphereColor.setAlpha(255);
 
-    // Vẽ mặt cầu cho nguyên tử bên trái
     push();
     translate(n1Atom.pos.x, n1Atom.pos.y, 0);
     rotateY(clSphereRotation1);
     noStroke();
     fill(blendedSphereColor);
-    sphere(nOrbitalRadius);
+    sphere(nOrbitalRadius, 48, 48);
     pop();
 
-    // Vẽ khung dây cho mặt cầu bên trái
-    push();
-    translate(n1Atom.pos.x, n1Atom.pos.y, 0);
-    rotateY(clSphereRotation1);
-    stroke(255);
-    strokeWeight(0.75);
-    noFill();
-    sphere(nOrbitalRadius);
-    pop();
-
-    // Vẽ mặt cầu cho nguyên tử bên phải
     push();
     translate(n2Atom.pos.x, n2Atom.pos.y, 0);
     rotateY(clSphereRotation2);
     noStroke();
     fill(blendedSphereColor);
-    sphere(nOrbitalRadius);
-    pop();
-
-    // Vẽ khung dây cho mặt cầu bên phải
-    push();
-    translate(n2Atom.pos.x, n2Atom.pos.y, 0);
-    rotateY(clSphereRotation2);
-    stroke(255);
-    strokeWeight(0.75);
-    noFill();
-    sphere(nOrbitalRadius);
+    sphere(nOrbitalRadius, 48, 48);
     pop();
 
     clSphereRotation1 += sphereRotationSpeed;
@@ -398,16 +370,14 @@ function drawElectronSpheres() {
 }
 
 function drawAtomLabels() {
-    const labelYOffset = atoms[0].shellRadii[atoms[0].shellRadii.length - 1] + 30; // 30px dưới lớp ngoài cùng
+    const labelYOffset = atoms[0].shellRadii[atoms[0].shellRadii.length - 1] + 30;
     const labelColor = color(255);
 
-    // Nhãn cho nguyên tử bên trái
     push();
     fill(labelColor);
     drawBillboardText("N", atoms[0].pos.x, atoms[0].pos.y + labelYOffset, 0, 16);
     pop();
 
-    // Nhãn cho nguyên tử bên phải
     push();
     fill(labelColor);
     drawBillboardText("N", atoms[1].pos.x, atoms[1].pos.y + labelYOffset, 0, 16);
@@ -421,18 +391,17 @@ class Atom {
         this.protons = protons;
         this.shells = [];
         this.shellRadii = [];
+        this.electronCol = electronCol;
 
         this.electronSpinSpeeds = [];
 
         let baseR = 50;
         let increment = 40;
 
-        // Chỉ có một cặp electron riêng (lone pair) cho mỗi nguyên tử N
         this.nonBondingPairAngles = [
             { angle: radians(0), spread: radians(5) }
         ];
 
-        // Cập nhật màu electron của nguyên tử đối diện
         this.otherElectronCol = (electronCol.levels[0] === 255 && electronCol.levels[1] === 165) ? color(100, 255, 255) : color(255, 165, 0);
 
         for (let i = 0; i < shellCounts.length; i++) {
@@ -459,7 +428,6 @@ class Atom {
         const outerShell = this.shells[outerShellIndex];
 
         let sharedElectronCount = 0;
-        // Mỗi nguyên tử N chia sẻ 3 electron
         for (let i = 0; i < outerShell.length && sharedElectronCount < 3; i++) {
             if (!outerShell[i].isShared) {
                 outerShell[i].isShared = true;
@@ -499,7 +467,6 @@ class Atom {
 
         const outerShellIndex = this.shells.length - 1;
 
-        // Vị trí của 3 cặp electron liên kết
         const sharedElectronGap = 12;
         const sharedPairGap = 12;
         const electronSize = 6;
@@ -507,14 +474,12 @@ class Atom {
         const verticalOffset = 12;
         const lonePairOffset = 15;
 
-        // Vị trí cuối cùng cho 3 electron của nguyên tử 1
         const finalSharedPositions_1 = [
             { x: -sideOffset, y: -verticalOffset },
             { x: -sideOffset, y: 0 },
             { x: -sideOffset, y: verticalOffset }
         ];
 
-        // Vị trí cuối cùng cho 3 electron của nguyên tử 2
         const finalSharedPositions_2 = [
             { x: sideOffset, y: -verticalOffset },
             { x: sideOffset, y: 0 },
@@ -525,6 +490,11 @@ class Atom {
         let sharedCount = 0;
 
         for (let i = 0; i < this.shells.length; i++) {
+            // Thêm điều kiện để ẩn electron lớp ngoài cùng khi showSphere=true
+            if (showSphere && i === outerShellIndex) {
+                continue;
+            }
+
             let radius = this.shellRadii[i];
 
             if (state === "overlap_spinning" && i === outerShellIndex) {
@@ -563,7 +533,6 @@ class Atom {
                             ey = lerp(initialY, finalY, t_bonding);
                             sharedCount++;
                         } else {
-                            // Cặp electron riêng
                             const horizontalShift = (this.pos.x < 0) ? -(nOuterRadius) : (nOuterRadius);
                             const verticalShift = (nonSharedCount % 2 === 0) ? -lonePairOffset / 2 : lonePairOffset / 2;
                             let finalX = horizontalShift;
